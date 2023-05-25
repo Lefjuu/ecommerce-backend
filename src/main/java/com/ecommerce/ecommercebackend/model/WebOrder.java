@@ -1,6 +1,19 @@
 package com.ecommerce.ecommercebackend.model;
 
-import jakarta.persistence.*;
+
+import com.ecommerce.ecommercebackend.model.Address;
+import com.ecommerce.ecommercebackend.model.LocalUser;
+import com.ecommerce.ecommercebackend.model.WebOrderQuantities;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,26 +21,23 @@ import java.util.List;
 @Entity
 @Table(name = "web_order")
 public class WebOrder {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private LocalUser user;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
-
     @OneToMany(mappedBy = "order", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<WebOrderQuantities> quantities = new ArrayList<>();
 
     public List<WebOrderQuantities> getQuantities() {
         return quantities;
     }
-
     public void setQuantities(List<WebOrderQuantities> quantities) {
         this.quantities = quantities;
     }
@@ -44,10 +54,9 @@ public class WebOrder {
         return user;
     }
 
-    public void setUser(LocalUser User) {
+    public void setUser(LocalUser user) {
         this.user = user;
     }
-
     public Long getId() {
         return id;
     }
