@@ -50,14 +50,12 @@ public class UserService {
         return localUserDAO.save(user);
     }
 
-    private VerificationToken createVerificationToken(LocalUser user) throws EmailFailureException {
+    private VerificationToken createVerificationToken(LocalUser user) {
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(user));
         verificationToken.setCreatedTimestamp(new Timestamp(System.currentTimeMillis()));
         verificationToken.setUser(user);
         user.getVerificationTokens().add(verificationToken);
-        emailService.sendVerificationEmail(verificationToken);
-        verificationTokenDAO.save(verificationToken);
         return verificationToken;
     }
 
@@ -70,15 +68,13 @@ public class UserService {
                     return jwtService.generateJWT(user);
                 } else {
                     List<VerificationToken> verificationTokens = user.getVerificationTokens();
-
                     boolean resend = verificationTokens.size() == 0 ||
                             verificationTokens.get(0).getCreatedTimestamp().before(new Timestamp(System.currentTimeMillis() - (60 * 60 * 1000)));
-                    if(resend) {
+                    if (resend) {
                         VerificationToken verificationToken = createVerificationToken(user);
                         verificationTokenDAO.save(verificationToken);
                         emailService.sendVerificationEmail(verificationToken);
                     }
-
                     throw new UserNotVerifiedException(resend);
                 }
             }
@@ -89,10 +85,10 @@ public class UserService {
     @Transactional
     public boolean verifyUser(String token) {
         Optional<VerificationToken> opToken = verificationTokenDAO.findByToken(token);
-        if(opToken.isPresent()) {
+        if (opToken.isPresent()) {
             VerificationToken verificationToken = opToken.get();
             LocalUser user = verificationToken.getUser();
-            if(!user.isEmailVerified()) {
+            if (!user.isEmailVerified()) {
                 user.setEmailVerified(true);
                 localUserDAO.save(user);
                 verificationTokenDAO.deleteByUser(user);
