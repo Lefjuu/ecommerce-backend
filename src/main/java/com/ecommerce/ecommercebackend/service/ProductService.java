@@ -9,7 +9,7 @@ import java.util.List;
 @Service
 public class ProductService {
 
-    private ProductDAO productDAO;
+    private final ProductDAO productDAO;
 
     public ProductService(ProductDAO productDAO) {
         this.productDAO = productDAO;

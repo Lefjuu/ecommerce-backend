@@ -16,7 +16,7 @@ public class EmailService {
     private String fromAddress;
     @Value("${app.frontend.url}")
     private String url;
-    private JavaMailSender javaMailSender;
+    private final JavaMailSender javaMailSender;
 
     public EmailService(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;

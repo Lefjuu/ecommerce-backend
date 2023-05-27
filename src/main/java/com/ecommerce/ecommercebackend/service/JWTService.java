@@ -31,7 +31,7 @@ public class JWTService {
     public String generateJWT(LocalUser user) {
         return JWT.create()
                 .withClaim(USERNAME_KEY, user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
+                .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * expiryInSeconds)))
                 .withIssuer(issuer)
                 .sign(algorithm);
     }
@@ -39,7 +39,7 @@ public class JWTService {
     public String generateVerificationJWT(LocalUser user) {
         return JWT.create()
                 .withClaim(EMAIL_KEY, user.getEmail())
-                .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
+                .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * expiryInSeconds)))
                 .withIssuer(issuer)
                 .sign(algorithm);
     }

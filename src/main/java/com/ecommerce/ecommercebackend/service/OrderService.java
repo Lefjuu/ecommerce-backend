@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public class OrderService {
 
-    private WebOrderDAO webOrderDAO;
+    private final WebOrderDAO webOrderDAO;
 
     public OrderService(WebOrderDAO webOrderDAO) {
         this.webOrderDAO = webOrderDAO;
