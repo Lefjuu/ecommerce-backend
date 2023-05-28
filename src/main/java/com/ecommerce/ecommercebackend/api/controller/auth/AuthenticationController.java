@@ -2,13 +2,16 @@ package com.ecommerce.ecommercebackend.api.controller.auth;
 
 import com.ecommerce.ecommercebackend.api.model.LoginBody;
 import com.ecommerce.ecommercebackend.api.model.LoginResponse;
+import com.ecommerce.ecommercebackend.api.model.PasswordResetBody;
 import com.ecommerce.ecommercebackend.api.model.RegistrationBody;
 import com.ecommerce.ecommercebackend.exception.EmailFailureException;
+import com.ecommerce.ecommercebackend.exception.EmailNotFoundException;
 import com.ecommerce.ecommercebackend.exception.UserAlreadyExistsException;
 import com.ecommerce.ecommercebackend.exception.UserNotVerifiedException;
 import com.ecommerce.ecommercebackend.model.LocalUser;
 import com.ecommerce.ecommercebackend.service.UserService;
 import jakarta.validation.Valid;
+import org.apache.coyote.Response;
 import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -80,5 +83,23 @@ public class AuthenticationController {
     @GetMapping("/me")
     public LocalUser getLoggedInUserProfile(@AuthenticationPrincipal LocalUser user) {
         return user;
+    }
+
+    @PostMapping("/forgot")
+    public ResponseEntity forgotPassword(@RequestParam String email) {
+        try {
+            userService.forgotPassword(email);
+            return ResponseEntity.ok().build();
+        } catch (EmailNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (EmailFailureException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/reset")
+    public ResponseEntity resetPassword(@Valid @RequestBody PasswordResetBody body) {
+        userService.resetPassword(body);
+        return ResponseEntity.ok().build();
     }
 }

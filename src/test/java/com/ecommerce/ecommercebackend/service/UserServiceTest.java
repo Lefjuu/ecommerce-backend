@@ -1,11 +1,15 @@
 package com.ecommerce.ecommercebackend.service;
 
 import com.ecommerce.ecommercebackend.api.model.LoginBody;
+import com.ecommerce.ecommercebackend.api.model.PasswordResetBody;
 import com.ecommerce.ecommercebackend.api.model.RegistrationBody;
 import com.ecommerce.ecommercebackend.exception.EmailFailureException;
+import com.ecommerce.ecommercebackend.exception.EmailNotFoundException;
 import com.ecommerce.ecommercebackend.exception.UserAlreadyExistsException;
 import com.ecommerce.ecommercebackend.exception.UserNotVerifiedException;
+import com.ecommerce.ecommercebackend.model.LocalUser;
 import com.ecommerce.ecommercebackend.model.VerificationToken;
+import com.ecommerce.ecommercebackend.model.dao.LocalUserDAO;
 import com.ecommerce.ecommercebackend.model.dao.VerificationTokenDAO;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
@@ -32,6 +36,12 @@ public class UserServiceTest {
             .withPerMethodLifecycle(true);
     @Autowired
     private UserService userService;
+    @Autowired
+    private JWTService jwtService;
+    @Autowired
+    private LocalUserDAO localUserDAO;
+    @Autowired
+    private EncryptionService encryptionService;
     @Autowired
     private VerificationTokenDAO verificationTokenDAO;
     @Test
@@ -101,5 +111,30 @@ public class UserServiceTest {
             Assertions.assertTrue(userService.verifyUser(token), "Token should be valid");
             Assertions.assertNotNull(body, "The user should new be verified.");
         }
+    }
+
+    @Test
+    @Transactional
+    public void testForgotPassword() throws MessagingException {
+        Assertions.assertThrows(EmailNotFoundException.class,
+                () -> userService.forgotPassword("UserNotExist@junit.com"));
+        Assertions.assertDoesNotThrow(() -> userService.forgotPassword("UserA@junit.com"),
+                "Non existing email should be rejected.");
+        Assertions.assertEquals("UserA@junit.com", greenMailExtension.getReceivedMessages()[0]
+                .getRecipients(Message.RecipientType.TO)[0].toString(), "Password " +
+                "reset email should be sent.");
+    }
+    @Test
+    @Transactional
+    public void testResetPassword() {
+        LocalUser user = localUserDAO.findByUsernameIgnoreCase("UserA").get();
+        String token = jwtService.generatePasswordResetJWT(user);
+        PasswordResetBody body = new PasswordResetBody();
+        body.setToken(token);
+        body.setPassword("Password123456");
+        userService.resetPassword(body);
+        user = localUserDAO.findByUsernameIgnoreCase("UserA").get();
+        Assertions.assertTrue(encryptionService.verifyPassword("Password123456",
+                user.getPassword()), "Password change should be written to DB.");
     }
 }

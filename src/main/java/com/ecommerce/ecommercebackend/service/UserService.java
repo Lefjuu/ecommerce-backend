@@ -1,8 +1,10 @@
 package com.ecommerce.ecommercebackend.service;
 
 import com.ecommerce.ecommercebackend.api.model.LoginBody;
+import com.ecommerce.ecommercebackend.api.model.PasswordResetBody;
 import com.ecommerce.ecommercebackend.api.model.RegistrationBody;
 import com.ecommerce.ecommercebackend.exception.EmailFailureException;
+import com.ecommerce.ecommercebackend.exception.EmailNotFoundException;
 import com.ecommerce.ecommercebackend.exception.UserAlreadyExistsException;
 import com.ecommerce.ecommercebackend.exception.UserNotVerifiedException;
 import com.ecommerce.ecommercebackend.model.LocalUser;
@@ -10,6 +12,7 @@ import com.ecommerce.ecommercebackend.model.VerificationToken;
 import com.ecommerce.ecommercebackend.model.dao.LocalUserDAO;
 import com.ecommerce.ecommercebackend.model.dao.VerificationTokenDAO;
 import jakarta.transaction.Transactional;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -97,4 +100,26 @@ public class UserService {
         }
         return false;
     }
+
+    public void forgotPassword(String email) throws EmailNotFoundException, EmailFailureException {
+        Optional<LocalUser> opUser = localUserDAO.findByEmailIgnoreCase(email);
+        if (opUser.isPresent()) {
+            LocalUser user = opUser.get();
+            String token = jwtService.generatePasswordResetJWT(user);
+            emailService.sendPasswordResetEmail(user, token);
+        } else {
+            throw new EmailNotFoundException();
+        }
+    }
+
+    public void resetPassword(PasswordResetBody body) {
+        String email = jwtService.getResetPasswordEmail(body.getToken());
+        Optional<LocalUser> opUser = localUserDAO.findByEmailIgnoreCase(email);
+        if(opUser.isPresent()) {
+            LocalUser user = opUser.get();
+            user.setPassword(encryptionService.encryptPassword(body.getPassword()));
+            localUserDAO.save(user);
+        }
+    }
+
 }
